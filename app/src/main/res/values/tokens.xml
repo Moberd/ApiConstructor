@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <dimen name="indent.xxxxs">4dp</dimen>
+    <dimen name="indent.xxxs">8dp</dimen>
+    <dimen name="indent.xxs">12dp</dimen>
+    <dimen name="indent.xs">16dp</dimen>
+    <dimen name="indent.s">20dp</dimen>
+    <dimen name="indent.sm">24dp</dimen>
+    <dimen name="indent.m">32dp</dimen>
+    <dimen name="indent.l">40dp</dimen>
+    <dimen name="indent.sxl">44dp</dimen>
+    <dimen name="indent.xl">48dp</dimen>
+    <dimen name="indent.xxl">56dp</dimen>
+    <dimen name="indent.xxxl">64dp</dimen>
+
+    <dimen name="radii.xxxs">8dp</dimen>
+    <dimen name="radii.xs">16dp</dimen>
+
+    <dimen name="text.main.s">18sp</dimen>
+    <dimen name="text.main.m">22sp</dimen>
+    <dimen name="text.main.l">28sp</dimen>
+    <dimen name="text.main.xl">32sp</dimen>
+
+    <dimen name="text.main.line_height.m">28sp</dimen>
+
+    <dimen name="text.additional.xs">12sp</dimen>
+    <dimen name="text.additional.s">14sp</dimen>
+    <dimen name="text.additional.m">16sp</dimen>
+    <dimen name="text.additional.l">18sp</dimen>
+
+
+    <dimen name="design_bottom_navigation_height" tools:override="true">60dp</dimen>
+</resources>

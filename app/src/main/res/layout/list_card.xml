@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/listText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="/some_api_method/maybe_some_id"
+        android:textSize="@dimen/text.main.l"
+        android:layout_marginEnd="@dimen/indent.s"
+        android:layout_marginStart="@dimen/indent.s"/>
+</androidx.cardview.widget.CardView>
