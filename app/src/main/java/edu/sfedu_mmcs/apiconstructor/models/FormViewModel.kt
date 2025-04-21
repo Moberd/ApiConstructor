@@ -47,12 +47,11 @@ class FormViewModel(val reqRoute: String, val method: String) : ViewModel() {
             override fun onResponse(call: okhttp3.Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) {
-                        throw IOException("Запрос к серверу не был успешен:" +
+                        throw IOException("Error sending request:" +
                                 " ${response.code} ${response.message}")
                     }
                     val resp_text = response.body!!.string()
                     Log.d("Response", resp_text)
-
                     responseRes.postValue(resp_text)
                 }
             }

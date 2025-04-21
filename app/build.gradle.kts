@@ -30,6 +30,11 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    packaging{
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("draftv4/*")
+        resources.excludes.add("draftv3/*")
+    }
 }
 
 dependencies {
@@ -44,4 +49,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("io.swagger.parser.v3:swagger-parser:2.1.15"){
+        exclude(group = "javax.validation", module = "validation-api")
+    }
 }

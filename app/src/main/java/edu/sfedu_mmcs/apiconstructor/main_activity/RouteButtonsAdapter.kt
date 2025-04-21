@@ -23,7 +23,7 @@ class RouteButtonsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val ItemsViewModel = mList[position]
-        holder.button.text = ItemsViewModel.route
+        holder.button.text = ItemsViewModel.method + ItemsViewModel.route
         holder.button.setOnClickListener { this.onClick(ItemsViewModel) }
     }
 
