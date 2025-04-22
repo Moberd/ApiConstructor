@@ -22,7 +22,10 @@ class ListActivity: AppCompatActivity() {
         setContentView(R.layout.activity_main)
         myViewModel = ViewModelProvider(
             this,
-            ListViewModelFactory(intent.getStringExtra("route")!!)
+            ListViewModelFactory(
+                intent.getStringExtra("route")!!,
+                getSharedPreferences("UrlPrefs", MODE_PRIVATE)
+            )
         )[ListViewModel::class.java]
 
         val recyclerView = findViewById<RecyclerView>(R.id.routesRecycle)

@@ -1,5 +1,4 @@
 package edu.sfedu_mmcs.apiconstructor.form_activity
-
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import edu.sfedu_mmcs.apiconstructor.R
 
-class FormAdapter: RecyclerView.Adapter<FormAdapter.ViewHolder>() {
+class FormContentAdapter: RecyclerView.Adapter<FormContentAdapter.ViewHolder>() {
 
 
     private var mList = mutableListOf<String>()
@@ -22,7 +21,7 @@ class FormAdapter: RecyclerView.Adapter<FormAdapter.ViewHolder>() {
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: FormAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: FormContentAdapter.ViewHolder, position: Int) {
         holder.editText.setHint(mList[position])
     }
 

@@ -1,5 +1,7 @@
 package edu.sfedu_mmcs.apiconstructor.models
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,25 +19,28 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 
-class FormViewModel(val reqRoute: String, val method: String) : ViewModel() {
+class FormViewModel(val reqRoute: String, val method: String, val sp: SharedPreferences) : ViewModel() {
 
 
 
     val responseRes = MutableLiveData<String>()
-    private val api = Api()
+
+    private val api = Api(sp.getString("saved_url", "http://10.0.2.2:8000").toString(), "/openapi.json")
     private val client = OkHttpClient()
     private val JSON = "application/json; charset=utf-8".toMediaType()
     private val gson = Gson()
 
-    fun sendData(data: Map<String, Any>) {
+    fun sendData(data: Map<String, Any>, content: Map<String, Any>) {
 
          val myGson = GsonBuilder().registerTypeAdapter(Any::class.java, AnyTypeAdapter()).create()
 
         val newReqRoute = replacePlaceholders(reqRoute, data)
-        val body: RequestBody = myGson.toJson(data).toRequestBody(JSON)
+        val body: RequestBody = myGson.toJson(content).toRequestBody(JSON)
+
+
         val request = Request.Builder()
             .url(api.getBaseApi() + newReqRoute)
-            .method(method, body)
+            .method(method, if (method == "GET") null else body)
             .build()
 
         client.newCall(request).enqueue(object : Callback {

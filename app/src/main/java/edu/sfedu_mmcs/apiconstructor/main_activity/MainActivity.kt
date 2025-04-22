@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
             i.putExtra("route", route.route)
             i.putExtra("fields", route.fields)
             i.putExtra("method", route.method)
+            i.putExtra("content", route.content)
             startActivity(i)
         }
 

@@ -22,7 +22,7 @@ import java.io.IOException
 
 class RouteViewModel:  ViewModel() {
     val routeList = MutableLiveData<List<RouteInfo>>()
-    private val api = Api()
+    private val api = Api("http://10.0.2.2:8000", "/openapi.json") // http://10.0.2.2:8000
     private val gson = Gson()
     private val client = OkHttpClient()
 
@@ -52,15 +52,15 @@ class RouteViewModel:  ViewModel() {
                 result.add(name)
             }
         } else {
-            Log.d("Path parameter","        Could not resolve schema for $ref")
+            Log.d("Path parameter","Could not resolve schema for $ref")
         }
         return result
     }
 
     fun getRoutes() {
-
+        val specRoute = api.getOpenApi();
         val request = Request.Builder()
-            .url(api.getOpenApi())
+            .url(specRoute)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -91,9 +91,11 @@ class RouteViewModel:  ViewModel() {
                             operation.parameters?.forEach { parameter ->
                                 fieldsArr.add(parameter.name)
                             }
+                            val contentFields = ArrayList<String>()
                             operation.requestBody?.let { requestBody ->
                                 requestBody.content?.forEach { (mediaType, mediaTypeObject) ->
-                                    getSchemaInfo(mediaTypeObject.schema, openAPI)
+                                    if (mediaType == "application/json")
+                                        contentFields.addAll(getSchemaInfo(mediaTypeObject.schema, openAPI))
                                 }
                             }
 //                            operation.responses?.let { responses ->
@@ -111,8 +113,9 @@ class RouteViewModel:  ViewModel() {
                                 RouteInfo(
                                     pathKey,
                                     httpMethod.name,
-                                    if (fieldsArr.size > 0) "form" else "list",
-                                    fieldsArr
+                                    if (fieldsArr.size + contentFields.size > 0) "form" else "list",
+                                    fieldsArr,
+                                    contentFields
                                 )
                             )
                         }

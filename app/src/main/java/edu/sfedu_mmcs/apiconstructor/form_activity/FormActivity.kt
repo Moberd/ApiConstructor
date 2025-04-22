@@ -18,6 +18,7 @@ class FormActivity: AppCompatActivity() {
     private val TAG = "FormActivity"
     private lateinit var myViewModel: FormViewModel
     private val listAdapter = FormAdapter()
+    private val contentAdapter = FormAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,15 +27,21 @@ class FormActivity: AppCompatActivity() {
             this,
             FormViewModelFactory(
                 intent.getStringExtra("route")!!,
-                intent.getStringExtra("method")!!
+                intent.getStringExtra("method")!!,
+                getSharedPreferences("UrlPrefs", MODE_PRIVATE)
             )
         )[FormViewModel::class.java]
 
         val recyclerView = findViewById<RecyclerView>(R.id.formsRecycle)
+        val recyclerContentView = findViewById<RecyclerView>(R.id.formsContentRecycle)
 
         recyclerView.adapter = listAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
         listAdapter.setItems(intent.getStringArrayListExtra("fields")!!)
+
+        recyclerContentView.adapter = contentAdapter
+        recyclerContentView.layoutManager = LinearLayoutManager(this)
+        contentAdapter.setItems(intent.getStringArrayListExtra("content")!!)
 
         myViewModel.responseRes.observe(this, Observer {
             Log.d(TAG, "onResponse: $it")
@@ -43,7 +50,7 @@ class FormActivity: AppCompatActivity() {
         val sendBtn = findViewById<Button>(R.id.sendBtn)
         sendBtn.text = intent.getStringExtra("route")
         sendBtn.setOnClickListener {
-            myViewModel.sendData(collectData(recyclerView))
+            myViewModel.sendData(collectData(recyclerView), collectData(recyclerContentView))
         }
 
     }

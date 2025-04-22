@@ -1,5 +1,6 @@
 package edu.sfedu_mmcs.apiconstructor.models
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,9 +14,9 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
-class ListViewModel(val reqRoute: String) : ViewModel(){
+class ListViewModel(val reqRoute: String, val sp: SharedPreferences) : ViewModel(){
     val dataList = MutableLiveData<List<String>>()
-    private val api = Api()
+    private val api = Api(sp.getString("saved_url", "http://10.0.2.2:8000").toString(), "/openapi.json")
     private val client = OkHttpClient()
     private val gson = Gson()
 
