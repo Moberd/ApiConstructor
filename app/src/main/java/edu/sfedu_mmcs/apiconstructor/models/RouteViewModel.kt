@@ -1,5 +1,6 @@
 package edu.sfedu_mmcs.apiconstructor.models
 
+import android.content.SharedPreferences
 import android.telecom.Call
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -8,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.utils.Api
+import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
@@ -19,37 +21,78 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
-
-class RouteViewModel:  ViewModel() {
+class RouteViewModel (
+    private val sp: SharedPreferences
+):  ViewModel() {
     val routeList = MutableLiveData<List<RouteInfo>>()
-    private val api = Api("http://10.0.2.2:8000", "/openapi.json") // http://10.0.2.2:8000
-    private val gson = Gson()
+    private val api = Api(
+        sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
+        sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
+    )
     private val client = OkHttpClient()
 
 
-    fun getSchemaInfo(schema: Schema<*>, openAPI: OpenAPI): List<String> {
-        val result = ArrayList<String>()
+    fun getSchemaInfo(schema: Schema<*>, openAPI: OpenAPI): List<ContentInfo> {
+        val result = ArrayList<ContentInfo>()
         if (schema.`$ref` != null) {
             Log.d("Path parameter","ref: ${schema.`$ref`}")
             result.addAll(resolveSchemaRef(schema.`$ref`, openAPI))
+        } else if (schema.type == "array") {
+            // Обработка случая, когда схема является массивом
+            schema.items?.let { itemSchema ->
+                val itemInfo = getSchemaInfo(itemSchema, openAPI)
+                val arrayValue = itemInfo.joinToString(", ") { it.example }
+                result.add(ContentInfo("array", "[$arrayValue]"))
+            }
         } else {
             schema.properties?.forEach { (name, propSchema) ->
-                result.add(name)
+                if (propSchema.example != null) {
+                    result.add(ContentInfo(name, propSchema.example.toString()))
+                } else if (propSchema.examples != null) {
+                    result.add(
+                        ContentInfo(
+                            name,
+                            propSchema.examples[0].toString()
+                        )
+                    )
+                }
             }
         }
         return result
     }
 
     // Function to resolve and print information about a schema reference from openAPI
-    fun resolveSchemaRef(ref: String, openAPI: OpenAPI): List<String> {
+    fun resolveSchemaRef(ref: String, openAPI: OpenAPI): List<ContentInfo> {
         val refPath = ref.replace("#/components/schemas/", "")
         val schema = openAPI.components?.schemas?.get(refPath)
-        val result = ArrayList<String>()
+        val result = ArrayList<ContentInfo>()
         if (schema != null) {
             Log.d("Path parameter","        Resolved schema at: /components/schemas/$refPath")
             Log.d("Path parameter","        Type: ${schema.type}")
             schema.properties?.forEach { (name, propSchema) ->
-                result.add(name)
+                if (propSchema.type != "array") {
+                    if (propSchema.`$ref` != null) {
+                        result.addAll(resolveSchemaRef(propSchema.`$ref`, openAPI))
+                    } else {
+                        result.add(
+                            ContentInfo(
+                                name,
+                                if (propSchema.example == null) "" else propSchema.example.toString()
+                            )
+                        )
+                    }
+                } else {
+                    propSchema.items?.let { itemSchema ->
+                        val itemValue = if (itemSchema.example != null) {
+                            itemSchema.example.toString()
+                        } else if (itemSchema.`$ref` != null) {
+                            resolveSchemaRef(itemSchema.`$ref`, openAPI).joinToString { it.example }
+                        } else {
+                            "Array item"
+                        }
+                        result.add(ContentInfo(name, "[$itemValue]"))
+                    }
+                }
             }
         } else {
             Log.d("Path parameter","Could not resolve schema for $ref")
@@ -87,28 +130,17 @@ class RouteViewModel:  ViewModel() {
                     for ((pathKey, pathItem) in openAPI.paths) {
                         Log.d("Path parameter", pathKey)
                         pathItem.readOperationsMap().forEach { (httpMethod, operation) ->
-                            val fieldsArr = ArrayList<String>()
+                            val fieldsArr = ArrayList<ContentInfo>()
                             operation.parameters?.forEach { parameter ->
-                                fieldsArr.add(parameter.name)
+                                fieldsArr.add(ContentInfo(parameter.name, ""))
                             }
-                            val contentFields = ArrayList<String>()
+                            val contentFields = ArrayList<ContentInfo>()
                             operation.requestBody?.let { requestBody ->
                                 requestBody.content?.forEach { (mediaType, mediaTypeObject) ->
                                     if (mediaType == "application/json")
                                         contentFields.addAll(getSchemaInfo(mediaTypeObject.schema, openAPI))
                                 }
                             }
-//                            operation.responses?.let { responses ->
-//                                println("    Responses:")
-//                                responses.forEach { (statusCode, response: ApiResponse) ->
-//                                    println("      Status Code: $statusCode")
-//                                    println("      Description: ${response.description}")
-//                                    response.content?.forEach { (mediaType, mediaTypeObject) ->
-//                                        println("        Media Type: $mediaType")
-//                                        println("        Schema: ${mediaTypeObject.schema?.type}")
-//                                    }
-//                                }
-//                            }
                             routesRes.add(
                                 RouteInfo(
                                     pathKey,
@@ -121,11 +153,6 @@ class RouteViewModel:  ViewModel() {
                         }
                     }
                     routeList.postValue(routesRes)
-//                    routeList.postValue(
-//                        gson.fromJson(
-//                            specContent, object : TypeToken<List<RouteInfo>>() {}.type
-//                        )
-//                    )
                 }
             }
         })

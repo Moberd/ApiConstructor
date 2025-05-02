@@ -17,8 +17,9 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".main_activity.MainActivity"/>
-        <activity android:name=".list_activity.ListActivity"/>
         <activity android:name=".form_activity.FormActivity"/>
+        <activity android:name=".result_activity.ResultActivity"/>
+        <activity android:name=".list_activity.ListActivity"/>
         <activity android:name=".url_activity.UrlActivity"
             android:exported="true">
             <intent-filter>
@@ -27,5 +28,6 @@
             </intent-filter>
         </activity>
     </application>
+
 
 </manifest>

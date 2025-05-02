@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import edu.sfedu_mmcs.apiconstructor.utils.AnyTypeAdapter
 import edu.sfedu_mmcs.apiconstructor.utils.Api
+import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.replacePlaceholders
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -25,17 +26,20 @@ class FormViewModel(val reqRoute: String, val method: String, val sp: SharedPref
 
     val responseRes = MutableLiveData<String>()
 
-    private val api = Api(sp.getString("saved_url", "http://10.0.2.2:8000").toString(), "/openapi.json")
+    private val api = Api(
+        sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
+        sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
+    )
     private val client = OkHttpClient()
     private val JSON = "application/json; charset=utf-8".toMediaType()
     private val gson = Gson()
 
-    fun sendData(data: Map<String, Any>, content: Map<String, Any>) {
+    fun sendData(data: Map<String, String>, content: Map<String, ContentInfo>) {
 
          val myGson = GsonBuilder().registerTypeAdapter(Any::class.java, AnyTypeAdapter()).create()
 
         val newReqRoute = replacePlaceholders(reqRoute, data)
-        val body: RequestBody = myGson.toJson(content).toRequestBody(JSON)
+        val body: RequestBody = myGson.toJson(content.values).toRequestBody(JSON)
 
 
         val request = Request.Builder()
@@ -53,7 +57,7 @@ class FormViewModel(val reqRoute: String, val method: String, val sp: SharedPref
                 response.use {
                     if (!response.isSuccessful) {
                         throw IOException("Error sending request:" +
-                                " ${response.code} ${response.message}")
+                                "${response.code} ${response.message}")
                     }
                     val resp_text = response.body!!.string()
                     Log.d("Response", resp_text)

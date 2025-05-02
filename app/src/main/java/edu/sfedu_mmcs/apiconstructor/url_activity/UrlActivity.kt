@@ -25,15 +25,20 @@ class UrlActivity : AppCompatActivity() {
         )[UrlViewModel::class.java]
 
         val urlInput = findViewById<EditText>(R.id.url_input)
+        val specInput = findViewById<EditText>(R.id.spec_input)
         val saveButton = findViewById<Button>(R.id.save_button)
 
         viewModel.url.observe(this, Observer { url ->
             urlInput.setText(url)
         })
+        viewModel.spec.observe(this, Observer { spec ->
+            specInput.setText(spec)
+        })
 
         saveButton.setOnClickListener {
             val url = urlInput.text.toString()
-            viewModel.saveUrl(url)
+            val spec = specInput.text.toString()
+            viewModel.saveUrl(url, spec)
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()

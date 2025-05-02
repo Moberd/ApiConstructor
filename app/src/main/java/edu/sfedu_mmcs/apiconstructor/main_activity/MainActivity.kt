@@ -12,6 +12,8 @@ import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.form_activity.FormActivity
 import edu.sfedu_mmcs.apiconstructor.list_activity.ListActivity
 import edu.sfedu_mmcs.apiconstructor.models.RouteViewModel
+import edu.sfedu_mmcs.apiconstructor.models.RouteViewModelFactory
+import edu.sfedu_mmcs.apiconstructor.models.UrlViewModelFactory
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 
 
@@ -23,7 +25,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        myViewModel = ViewModelProvider(this)[RouteViewModel::class.java]
+        myViewModel = ViewModelProvider(
+            this,
+             RouteViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
+        )[RouteViewModel::class.java]
         val recyclerView = findViewById<RecyclerView>(R.id.routesRecycle)
 
         recyclerView.adapter = routeButtonsAdapter

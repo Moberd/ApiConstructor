@@ -16,7 +16,10 @@ import java.io.IOException
 
 class ListViewModel(val reqRoute: String, val sp: SharedPreferences) : ViewModel(){
     val dataList = MutableLiveData<List<String>>()
-    private val api = Api(sp.getString("saved_url", "http://10.0.2.2:8000").toString(), "/openapi.json")
+    private val api = Api(
+        sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
+        sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
+    )
     private val client = OkHttpClient()
     private val gson = Gson()
 

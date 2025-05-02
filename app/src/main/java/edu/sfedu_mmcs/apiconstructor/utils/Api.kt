@@ -10,6 +10,6 @@ class Api (
     }
 
     fun getOpenApi(): String{
-        return base + openApiRoute
+        return openApiRoute
     }
 }

@@ -1,6 +1,7 @@
 package edu.sfedu_mmcs.apiconstructor.form_activity
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -9,16 +10,22 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.models.FormViewModel
 import edu.sfedu_mmcs.apiconstructor.models.FormViewModelFactory
+import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
+import androidx.core.content.edit
+import edu.sfedu_mmcs.apiconstructor.main_activity.MainActivity
+import edu.sfedu_mmcs.apiconstructor.result_activity.ResultActivity
 
 class FormActivity: AppCompatActivity() {
 
     private val TAG = "FormActivity"
     private lateinit var myViewModel: FormViewModel
-    private val listAdapter = FormAdapter()
-    private val contentAdapter = FormAdapter()
+    private val listAdapter = FormContentAdapter()
+    private val contentAdapter = FormContentAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,13 +42,29 @@ class FormActivity: AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.formsRecycle)
         val recyclerContentView = findViewById<RecyclerView>(R.id.formsContentRecycle)
 
+        val prefs = getSharedPreferences(intent.getStringExtra("method")!! + intent.getStringExtra("route")!!.replace("/", "_"), MODE_PRIVATE)
+        val fieldsDataJson = prefs.getString("fieldsData", null)
+        val contentDataJson = prefs.getString("contentData", null)
+
+
         recyclerView.adapter = listAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-        listAdapter.setItems(intent.getStringArrayListExtra("fields")!!)
+        if (fieldsDataJson != null) {
+            val fieldsData: ArrayList<ContentInfo> = Gson().fromJson(fieldsDataJson, object : TypeToken<ArrayList<ContentInfo>>() {}.type)
+            listAdapter.setItems(fieldsData)
+        } else {
+            val list = intent.getParcelableArrayListExtra<ContentInfo>("fields")!!
+            listAdapter.setItems(list)
+        }
 
         recyclerContentView.adapter = contentAdapter
         recyclerContentView.layoutManager = LinearLayoutManager(this)
-        contentAdapter.setItems(intent.getStringArrayListExtra("content")!!)
+        if (contentDataJson != null) {
+            val contentData: ArrayList<ContentInfo> = Gson().fromJson(contentDataJson, object : TypeToken<ArrayList<ContentInfo>>() {}.type)
+            contentAdapter.setItems(contentData)
+        } else {
+            contentAdapter.setItems(intent.getParcelableArrayListExtra<ContentInfo>("content")!!)
+        }
 
         myViewModel.responseRes.observe(this, Observer {
             Log.d(TAG, "onResponse: $it")
@@ -50,28 +73,48 @@ class FormActivity: AppCompatActivity() {
         val sendBtn = findViewById<Button>(R.id.sendBtn)
         sendBtn.text = intent.getStringExtra("route")
         sendBtn.setOnClickListener {
-            myViewModel.sendData(collectData(recyclerView), collectData(recyclerContentView))
+            val fieldsData = collectContentData(recyclerView)
+            val contentData = collectContentData(recyclerContentView)
+
+            prefs.edit() {
+                putString("fieldsData", Gson().toJson(fieldsData.values))
+                putString("contentData", Gson().toJson(contentData.values))
+            }
+
+            myViewModel.sendData(collectData(recyclerView), contentData)
         }
 
     }
 
-    private fun collectData(recyclerView: RecyclerView): MutableMap<String, Any> {
-        val data = mutableMapOf<String, Any>()
+    private fun collectData(recyclerView: RecyclerView): MutableMap<String, String> {
+        val data = mutableMapOf<String, String>()
         for (i in 0 until recyclerView.childCount) {
-            val viewHolder = recyclerView.findViewHolderForAdapterPosition(i) as FormAdapter.ViewHolder
+            val viewHolder = recyclerView.findViewHolderForAdapterPosition(i) as FormContentAdapter.ViewHolder
             data[viewHolder.editText.hint.toString()] = viewHolder.editText.text.toString()
+        }
+        return data
+    }
+    private fun collectContentData(recyclerView: RecyclerView): MutableMap<String, ContentInfo> {
+        val data = mutableMapOf<String, ContentInfo>()
+        for (i in 0 until recyclerView.childCount) {
+            val viewHolder = recyclerView.findViewHolderForAdapterPosition(i) as FormContentAdapter.ViewHolder
+            data[viewHolder.editText.hint.toString()] = ContentInfo(viewHolder.editText.hint.toString(), viewHolder.editText.text.toString())
         }
         return data
     }
 
     private fun showResultDialog(text: String){
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Response")
-        builder.setMessage(text)
-        builder.setPositiveButton("OK") { dialog, which ->
-            dialog.dismiss()
-        }
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
+//        val builder = AlertDialog.Builder(this)
+//        builder.setTitle("Response")
+//        builder.setMessage(text)
+//        builder.setPositiveButton("OK") { dialog, which ->
+//            dialog.dismiss()
+//        }
+//        val dialog: AlertDialog = builder.create()
+//        dialog.show()
+        val intent = Intent(this, ResultActivity::class.java)
+        intent.putExtra("result", text)
+        startActivity(intent)
+        finish()
     }
 }
