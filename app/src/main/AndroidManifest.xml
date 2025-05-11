@@ -20,6 +20,7 @@
         <activity android:name=".form_activity.FormActivity"/>
         <activity android:name=".result_activity.ResultActivity"/>
         <activity android:name=".list_activity.ListActivity"/>
+        <activity android:name=".settings_activity.SettingsActivity"/>
         <activity android:name=".url_activity.UrlActivity"
             android:exported="true">
             <intent-filter>

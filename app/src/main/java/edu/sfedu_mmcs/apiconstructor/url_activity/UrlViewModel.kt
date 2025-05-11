@@ -1,4 +1,4 @@
-package edu.sfedu_mmcs.apiconstructor.models
+package edu.sfedu_mmcs.apiconstructor.url_activity
 import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

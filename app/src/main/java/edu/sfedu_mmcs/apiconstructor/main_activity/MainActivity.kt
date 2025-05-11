@@ -3,6 +3,8 @@ package edu.sfedu_mmcs.apiconstructor.main_activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -11,9 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.form_activity.FormActivity
 import edu.sfedu_mmcs.apiconstructor.list_activity.ListActivity
-import edu.sfedu_mmcs.apiconstructor.models.RouteViewModel
-import edu.sfedu_mmcs.apiconstructor.models.RouteViewModelFactory
-import edu.sfedu_mmcs.apiconstructor.models.UrlViewModelFactory
+import edu.sfedu_mmcs.apiconstructor.settings_activity.SettingsActivity
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 
 
@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.toolbar))
         myViewModel = ViewModelProvider(
             this,
              RouteViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
@@ -41,6 +42,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
     private fun goToActivity(route: RouteInfo){
         if (route.type == "list"){
             val i = Intent(this, ListActivity::class.java)
@@ -52,8 +58,19 @@ class MainActivity : AppCompatActivity() {
             i.putExtra("fields", route.fields)
             i.putExtra("method", route.method)
             i.putExtra("content", route.content)
+            i.putExtra("security", route.security)
             startActivity(i)
         }
+    }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                // Navigate to SettingsActivity
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

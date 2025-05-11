@@ -1,4 +1,4 @@
-package edu.sfedu_mmcs.apiconstructor.models
+package edu.sfedu_mmcs.apiconstructor.list_activity
 
 import android.content.SharedPreferences
 import android.util.Log
@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.utils.Api
-import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,6 +26,7 @@ class ListViewModel(val reqRoute: String, val sp: SharedPreferences) : ViewModel
 
         val request = Request.Builder()
             .url(api.getBaseApi() + reqRoute)
+            .header("api_key", sp.getString("apiKey", "")!!)
             .build()
 
         client.newCall(request).enqueue(object : Callback {

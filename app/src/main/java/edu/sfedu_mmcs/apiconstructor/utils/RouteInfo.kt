@@ -5,7 +5,8 @@ class RouteInfo(
     val method: String,
     val type: String,
     val fields: ArrayList<ContentInfo>,
-    val content: ArrayList<ContentInfo>
+    val content: ArrayList<ContentInfo>,
+    val security: ArrayList<String>
 ) {
 
 }

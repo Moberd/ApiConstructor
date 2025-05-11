@@ -1,14 +1,11 @@
-package edu.sfedu_mmcs.apiconstructor.models
+package edu.sfedu_mmcs.apiconstructor.main_activity
 
 import android.content.SharedPreferences
-import android.telecom.Call
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.utils.Api
+import edu.sfedu_mmcs.apiconstructor.utils.AuthInfo
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import io.swagger.v3.oas.models.OpenAPI
@@ -25,6 +22,7 @@ class RouteViewModel (
     private val sp: SharedPreferences
 ):  ViewModel() {
     val routeList = MutableLiveData<List<RouteInfo>>()
+    val authList = MutableLiveData<List<AuthInfo>>()
     private val api = Api(
         sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
         sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
@@ -38,7 +36,6 @@ class RouteViewModel (
             Log.d("Path parameter","ref: ${schema.`$ref`}")
             result.addAll(resolveSchemaRef(schema.`$ref`, openAPI))
         } else if (schema.type == "array") {
-            // Обработка случая, когда схема является массивом
             schema.items?.let { itemSchema ->
                 val itemInfo = getSchemaInfo(itemSchema, openAPI)
                 val arrayValue = itemInfo.joinToString(", ") { it.example }
@@ -134,6 +131,10 @@ class RouteViewModel (
                             operation.parameters?.forEach { parameter ->
                                 fieldsArr.add(ContentInfo(parameter.name, ""))
                             }
+                            val secArr = ArrayList<String>()
+                            operation.security?.forEach { sec ->
+                                secArr.addAll(sec.keys)
+                            }
                             val contentFields = ArrayList<ContentInfo>()
                             operation.requestBody?.let { requestBody ->
                                 requestBody.content?.forEach { (mediaType, mediaTypeObject) ->
@@ -147,7 +148,8 @@ class RouteViewModel (
                                     httpMethod.name,
                                     if (fieldsArr.size + contentFields.size > 0) "form" else "list",
                                     fieldsArr,
-                                    contentFields
+                                    contentFields,
+                                    secArr
                                 )
                             )
                         }

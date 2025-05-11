@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
@@ -25,6 +26,9 @@ class RouteButtonsAdapter(
         val ItemsViewModel = mList[position]
         holder.button.text = ItemsViewModel.method + ItemsViewModel.route
         holder.button.setOnClickListener { this.onClick(ItemsViewModel) }
+        if (ItemsViewModel.security.size > 0){
+            holder.lock_image.visibility = View.VISIBLE
+        }
     }
 
     override fun getItemCount(): Int {
@@ -33,6 +37,7 @@ class RouteButtonsAdapter(
 
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
         val button: Button = itemView.findViewById(R.id.routeBtn)
+        val lock_image: ImageView = itemView.findViewById(R.id.auth_lock)
     }
 
     @SuppressLint("NotifyDataSetChanged")

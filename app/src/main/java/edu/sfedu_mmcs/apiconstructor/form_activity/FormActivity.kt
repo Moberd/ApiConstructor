@@ -1,6 +1,5 @@
 package edu.sfedu_mmcs.apiconstructor.form_activity
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -13,11 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.R
-import edu.sfedu_mmcs.apiconstructor.models.FormViewModel
-import edu.sfedu_mmcs.apiconstructor.models.FormViewModelFactory
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import androidx.core.content.edit
-import edu.sfedu_mmcs.apiconstructor.main_activity.MainActivity
 import edu.sfedu_mmcs.apiconstructor.result_activity.ResultActivity
 
 class FormActivity: AppCompatActivity() {
@@ -35,7 +31,8 @@ class FormActivity: AppCompatActivity() {
             FormViewModelFactory(
                 intent.getStringExtra("route")!!,
                 intent.getStringExtra("method")!!,
-                getSharedPreferences("UrlPrefs", MODE_PRIVATE)
+                intent.getStringArrayListExtra("security")!!,
+                getSharedPreferences("AppSettings", MODE_PRIVATE)
             )
         )[FormViewModel::class.java]
 
@@ -70,6 +67,7 @@ class FormActivity: AppCompatActivity() {
             Log.d(TAG, "onResponse: $it")
             showResultDialog(it)
         })
+
         val sendBtn = findViewById<Button>(R.id.sendBtn)
         sendBtn.text = intent.getStringExtra("route")
         sendBtn.setOnClickListener {
@@ -104,14 +102,6 @@ class FormActivity: AppCompatActivity() {
     }
 
     private fun showResultDialog(text: String){
-//        val builder = AlertDialog.Builder(this)
-//        builder.setTitle("Response")
-//        builder.setMessage(text)
-//        builder.setPositiveButton("OK") { dialog, which ->
-//            dialog.dismiss()
-//        }
-//        val dialog: AlertDialog = builder.create()
-//        dialog.show()
         val intent = Intent(this, ResultActivity::class.java)
         intent.putExtra("result", text)
         startActivity(intent)

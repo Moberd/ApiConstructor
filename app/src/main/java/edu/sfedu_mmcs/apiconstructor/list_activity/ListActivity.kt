@@ -8,8 +8,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import edu.sfedu_mmcs.apiconstructor.R
-import edu.sfedu_mmcs.apiconstructor.models.ListViewModel
-import edu.sfedu_mmcs.apiconstructor.models.ListViewModelFactory
 
 class ListActivity: AppCompatActivity() {
 
@@ -24,7 +22,7 @@ class ListActivity: AppCompatActivity() {
             this,
             ListViewModelFactory(
                 intent.getStringExtra("route")!!,
-                getSharedPreferences("UrlPrefs", MODE_PRIVATE)
+                getSharedPreferences("AppSettings", MODE_PRIVATE)
             )
         )[ListViewModel::class.java]
 
