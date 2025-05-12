@@ -3,14 +3,15 @@ package edu.sfedu_mmcs.apiconstructor.settings_activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
 import edu.sfedu_mmcs.apiconstructor.R
-import edu.sfedu_mmcs.apiconstructor.main_activity.MainActivity
 import edu.sfedu_mmcs.apiconstructor.url_activity.UrlActivity
 import edu.sfedu_mmcs.apiconstructor.utils.AuthInfo
 
@@ -29,14 +30,18 @@ class SettingsActivity : AppCompatActivity() {
         val switchPrev = findViewById<SwitchMaterial>(R.id.switch_prev)
         val buttonSave = findViewById<Button>(R.id.button_save)
         val buttonExit = findViewById<Button>(R.id.button_exit)
+        val progressBar = findViewById<ProgressBar>(R.id.progress_bar)
+        val contentLayout = findViewById<View>(R.id.content_layout)
 
         mViewModel = ViewModelProvider(
             this,
             SettingsViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
         )[SettingsViewModel::class.java]
+
         val recyclerView = findViewById<RecyclerView>(R.id.authRecycle)
         recyclerView.adapter = authAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+
         mViewModel.authList.observe(this) {
             val prev = ArrayList<AuthInfo>()
             for (item in it) {
@@ -44,6 +49,12 @@ class SettingsActivity : AppCompatActivity() {
             }
             authAdapter.setAuths(prev)
         }
+
+        mViewModel.isLoading.observe(this) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            contentLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
+        }
+
         mViewModel.getSecurityTypes()
 
         switchExamples.isChecked = sharedPreferences.getBoolean("enableExamples", true)
@@ -57,6 +68,7 @@ class SettingsActivity : AppCompatActivity() {
             }
             editor.apply()
         }
+
         buttonExit.setOnClickListener {
             val intent = Intent(this, UrlActivity::class.java)
             startActivity(intent)

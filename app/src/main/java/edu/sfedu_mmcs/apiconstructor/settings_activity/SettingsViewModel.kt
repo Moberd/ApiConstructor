@@ -16,8 +16,9 @@ import java.io.IOException
 
 class SettingsViewModel(
     private val sp: SharedPreferences
-):  ViewModel() {
+) : ViewModel() {
     val authList = MutableLiveData<List<AuthInfo>>()
+    val isLoading = MutableLiveData<Boolean>() // Для отслеживания состояния загрузки
     private val api = Api(
         sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
         sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
@@ -25,6 +26,7 @@ class SettingsViewModel(
     private val client = OkHttpClient()
 
     fun getSecurityTypes() {
+        isLoading.postValue(true)
         val specRoute = api.getOpenApi()
         val request = Request.Builder()
             .url(specRoute)
@@ -34,6 +36,7 @@ class SettingsViewModel(
 
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
+                isLoading.postValue(false)
             }
 
             override fun onResponse(call: okhttp3.Call, response: Response) {
@@ -50,9 +53,10 @@ class SettingsViewModel(
                 val authRes = ArrayList<AuthInfo>()
                 for (schema in secShemas.keys) {
                     Log.d("settings", secShemas[schema].toString())
-                        authRes.add(AuthInfo(schema, secShemas[schema]?.type.toString(), ""))
+                    authRes.add(AuthInfo(schema, secShemas[schema]?.type.toString(), ""))
                 }
                 authList.postValue(authRes)
+                isLoading.postValue(false)
             }
         })
     }
