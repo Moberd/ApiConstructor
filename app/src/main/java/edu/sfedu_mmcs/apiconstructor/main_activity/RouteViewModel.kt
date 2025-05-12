@@ -142,6 +142,10 @@ class RouteViewModel (
                                         contentFields.addAll(getSchemaInfo(mediaTypeObject.schema, openAPI))
                                 }
                             }
+                            val respMap = HashMap<String, String>()
+                            operation.responses?.forEach { op ->
+                                respMap[op.key] = op.value.description
+                            }
                             routesRes.add(
                                 RouteInfo(
                                     pathKey,
@@ -149,7 +153,8 @@ class RouteViewModel (
                                     if (fieldsArr.size + contentFields.size > 0) "form" else "list",
                                     fieldsArr,
                                     contentFields,
-                                    secArr
+                                    secArr,
+                                    respMap
                                 )
                             )
                         }

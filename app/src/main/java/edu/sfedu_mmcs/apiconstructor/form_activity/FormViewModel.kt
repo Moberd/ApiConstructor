@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder
 import edu.sfedu_mmcs.apiconstructor.utils.AnyTypeAdapter
 import edu.sfedu_mmcs.apiconstructor.utils.Api
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
+import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import edu.sfedu_mmcs.apiconstructor.utils.UrlBuilder
 import edu.sfedu_mmcs.apiconstructor.utils.replacePlaceholders
 import okhttp3.Callback
@@ -21,7 +22,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 
-class FormViewModel(val reqRoute: String, val method: String, val sec: ArrayList<String>, val sp: SharedPreferences) : ViewModel() {
+class FormViewModel(private val routeInfo: RouteInfo, val sp: SharedPreferences) : ViewModel() {
 
 
 
@@ -33,34 +34,33 @@ class FormViewModel(val reqRoute: String, val method: String, val sec: ArrayList
     )
     private val client = OkHttpClient()
     private val JSON = "application/json; charset=utf-8".toMediaType()
-    private val gson = Gson()
 
     fun sendData(data: Map<String, String>, content: Map<String, ContentInfo>) {
 
         val myGson = GsonBuilder().registerTypeAdapter(Any::class.java, AnyTypeAdapter()).create()
-        val url = UrlBuilder.buildUrl(api.getBaseApi(), reqRoute, data)
+        val url = UrlBuilder.buildUrl(api.getBaseApi(), routeInfo.route, data)
         val body: RequestBody = myGson.toJson(content.values).toRequestBody(JSON)
 
         val headersBuilder = Headers.Builder()
         headersBuilder.add("Content-Type", "application/json")
-        for (name in sec){
+        for (name in routeInfo.security){
             headersBuilder.add(name, sp.getString(name, "")!!)
         }
         val request = Request.Builder()
             .url(url)
-            .method(method, if (method == "GET") null else body)
+            .method(routeInfo.method, if (routeInfo.method.uppercase() == "GET") null else body)
             .headers(headersBuilder.build())
             .build()
 
         client.newCall(request).enqueue(object : Callback {
-
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
+                responseRes.postValue(e.message)
             }
-
             override fun onResponse(call: okhttp3.Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) {
+                        responseRes.postValue("${response.code} ${response.message}" + routeInfo.responses.getOrDefault(response.code.toString(), routeInfo.responses["default"]))
                         throw IOException("Error sending request:" +
                                 "${response.code} ${response.message}")
                     }

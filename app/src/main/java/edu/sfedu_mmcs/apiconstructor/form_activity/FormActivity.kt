@@ -15,6 +15,7 @@ import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import androidx.core.content.edit
 import edu.sfedu_mmcs.apiconstructor.result_activity.ResultActivity
+import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 
 class FormActivity: AppCompatActivity() {
 
@@ -29,9 +30,7 @@ class FormActivity: AppCompatActivity() {
         myViewModel = ViewModelProvider(
             this,
             FormViewModelFactory(
-                intent.getStringExtra("route")!!,
-                intent.getStringExtra("method")!!,
-                intent.getStringArrayListExtra("security")!!,
+                intent.getParcelableExtra("info", RouteInfo::class.java)!!,
                 getSharedPreferences("AppSettings", MODE_PRIVATE)
             )
         )[FormViewModel::class.java]
@@ -105,6 +104,5 @@ class FormActivity: AppCompatActivity() {
         val intent = Intent(this, ResultActivity::class.java)
         intent.putExtra("result", text)
         startActivity(intent)
-        finish()
     }
 }

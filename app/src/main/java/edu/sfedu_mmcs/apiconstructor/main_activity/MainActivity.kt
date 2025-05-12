@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
             i.putExtra("method", route.method)
             i.putExtra("content", route.content)
             i.putExtra("security", route.security)
+            i.putExtra("info", route)
             startActivity(i)
         }
     }
