@@ -7,6 +7,9 @@ import androidx.lifecycle.ViewModel
 import edu.sfedu_mmcs.apiconstructor.utils.Api
 import edu.sfedu_mmcs.apiconstructor.utils.AuthInfo
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
+import edu.sfedu_mmcs.apiconstructor.utils.Endpoint
+import edu.sfedu_mmcs.apiconstructor.utils.MethodItem
+import edu.sfedu_mmcs.apiconstructor.utils.RouteGroup
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
@@ -18,22 +21,21 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 
-class RouteViewModel (
+class RouteViewModel(
     private val sp: SharedPreferences
-):  ViewModel() {
-    val routeList = MutableLiveData<List<RouteInfo>>()
-    val authList = MutableLiveData<List<AuthInfo>>()
+) : ViewModel() {
+    val routeGroups = MutableLiveData<List<RouteGroup>>()
+    val isLoading = MutableLiveData<Boolean>()
     private val api = Api(
         sp.getString("saved_url", "http://10.0.2.2:8000").toString(),
         sp.getString("saved_spec", "http://10.0.2.2:8000/openapi.json").toString()
     )
     private val client = OkHttpClient()
 
-
     fun getSchemaInfo(schema: Schema<*>, openAPI: OpenAPI): List<ContentInfo> {
         val result = ArrayList<ContentInfo>()
         if (schema.`$ref` != null) {
-            Log.d("Path parameter","ref: ${schema.`$ref`}")
+            Log.d("Path parameter", "ref: ${schema.`$ref`}")
             result.addAll(resolveSchemaRef(schema.`$ref`, openAPI))
         } else if (schema.type == "array") {
             schema.items?.let { itemSchema ->
@@ -46,26 +48,20 @@ class RouteViewModel (
                 if (propSchema.example != null) {
                     result.add(ContentInfo(name, propSchema.example.toString()))
                 } else if (propSchema.examples != null) {
-                    result.add(
-                        ContentInfo(
-                            name,
-                            propSchema.examples[0].toString()
-                        )
-                    )
+                    result.add(ContentInfo(name, propSchema.examples[0].toString()))
                 }
             }
         }
         return result
     }
 
-    // Function to resolve and print information about a schema reference from openAPI
     fun resolveSchemaRef(ref: String, openAPI: OpenAPI): List<ContentInfo> {
         val refPath = ref.replace("#/components/schemas/", "")
         val schema = openAPI.components?.schemas?.get(refPath)
         val result = ArrayList<ContentInfo>()
         if (schema != null) {
-            Log.d("Path parameter","        Resolved schema at: /components/schemas/$refPath")
-            Log.d("Path parameter","        Type: ${schema.type}")
+            Log.d("Path parameter", "        Resolved schema at: /components/schemas/$refPath")
+            Log.d("Path parameter", "        Type: ${schema.type}")
             schema.properties?.forEach { (name, propSchema) ->
                 if (propSchema.type != "array") {
                     if (propSchema.`$ref` != null) {
@@ -92,40 +88,38 @@ class RouteViewModel (
                 }
             }
         } else {
-            Log.d("Path parameter","Could not resolve schema for $ref")
+            Log.d("Path parameter", "Could not resolve schema for $ref")
         }
         return result
     }
 
     fun getRoutes() {
-        val specRoute = api.getOpenApi();
+        isLoading.postValue(true)
+        val specRoute = api.getOpenApi()
         val request = Request.Builder()
             .url(specRoute)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
-
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 e.printStackTrace()
+                isLoading.postValue(false)
             }
 
             override fun onResponse(call: okhttp3.Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) {
-                        throw IOException("Запрос к серверу не был успешен:" +
-                                " ${response.code} ${response.message}")
+                        isLoading.postValue(false)
+                        throw IOException("Запрос к серверу не был успешен: ${response.code} ${response.message}")
                     }
                     val specContent = response.body!!.string()
                     val parser = OpenAPIV3Parser()
-                    val result: SwaggerParseResult = parser.readContents(
-                        specContent,
-                        null,
-                        null
-                    )
+                    val result: SwaggerParseResult = parser.readContents(specContent, null, null)
                     val openAPI = result.openAPI
-                    val routesRes = ArrayList<RouteInfo>()
+                    val routesRes = mutableMapOf<String, MutableList<RouteInfo>>()
+
+                    // Group routes by path
                     for ((pathKey, pathItem) in openAPI.paths) {
-                        Log.d("Path parameter", pathKey)
                         pathItem.readOperationsMap().forEach { (httpMethod, operation) ->
                             val fieldsArr = ArrayList<ContentInfo>()
                             operation.parameters?.forEach { parameter ->
@@ -146,23 +140,45 @@ class RouteViewModel (
                             operation.responses?.forEach { op ->
                                 respMap[op.key] = op.value.description
                             }
-                            routesRes.add(
-                                RouteInfo(
-                                    pathKey,
-                                    httpMethod.name,
-                                    if (fieldsArr.size + contentFields.size > 0) "form" else "list",
-                                    fieldsArr,
-                                    contentFields,
-                                    secArr,
-                                    respMap
-                                )
+                            val routeInfo = RouteInfo(
+                                pathKey,
+                                httpMethod.name,
+                                if (fieldsArr.size + contentFields.size > 0) "form" else "list",
+                                fieldsArr,
+                                contentFields,
+                                secArr,
+                                respMap
                             )
+                            routesRes.getOrPut(pathKey) { mutableListOf() }.add(routeInfo)
                         }
                     }
-                    routeList.postValue(routesRes)
+
+                    // Create groups by path prefix
+                    val groups = mutableMapOf<String, MutableList<Endpoint>>()
+                    routesRes.forEach { (path, routeInfos) ->
+                        val groupName = path.split("/")[1].takeIf { it.isNotEmpty() } ?: "Miscellaneous"
+                        val methods = routeInfos.map { MethodItem(it, it.method) }
+                        val endpoint = Endpoint(path, methods)
+                        groups.getOrPut(groupName) { mutableListOf() }.add(endpoint)
+                    }
+
+                    // Convert to RouteGroup list with sorted endpoints
+                    val routeGroupsList = groups.map { (groupName, endpoints) ->
+                        RouteGroup(
+                            groupName,
+                            endpoints.sortedWith(
+                                compareBy(
+                                    { it.isSingleMethod }, // false (multi-method) comes first
+                                    { it.path } // Alphabetical within each category
+                                )
+                            )
+                        )
+                    }.sortedBy { it.groupName }
+
+                    routeGroups.postValue(routeGroupsList)
+                    isLoading.postValue(false)
                 }
             }
         })
-
     }
 }

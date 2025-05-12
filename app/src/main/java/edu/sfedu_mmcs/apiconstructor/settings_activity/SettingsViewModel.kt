@@ -50,9 +50,7 @@ class SettingsViewModel(
                 val authRes = ArrayList<AuthInfo>()
                 for (schema in secShemas.keys) {
                     Log.d("settings", secShemas[schema].toString())
-                    if ((secShemas[schema]?.type.toString().lowercase()) == "apikey" && (secShemas[schema]?.`in`.toString().lowercase()) == "header") {
                         authRes.add(AuthInfo(schema, secShemas[schema]?.type.toString(), ""))
-                    }
                 }
                 authList.postValue(authRes)
             }

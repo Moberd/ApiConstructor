@@ -2,4 +2,8 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="method_get">#4CAF50</color>
+    <color name="method_post">#2196F3</color>
+    <color name="method_delete">#F44336</color>
+    <color name="method_put">#FF9800</color>
 </resources>
