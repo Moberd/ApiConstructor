@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
 import edu.sfedu_mmcs.apiconstructor.R
+import edu.sfedu_mmcs.apiconstructor.main_activity.MainActivity
 import edu.sfedu_mmcs.apiconstructor.url_activity.UrlActivity
 import edu.sfedu_mmcs.apiconstructor.utils.AuthInfo
 
@@ -30,15 +31,14 @@ class SettingsActivity : AppCompatActivity() {
         val switchPrev = findViewById<SwitchMaterial>(R.id.switch_prev)
         val buttonSave = findViewById<Button>(R.id.button_save)
         val buttonExit = findViewById<Button>(R.id.button_exit)
+        val recyclerView = findViewById<RecyclerView>(R.id.authRecycle)
         val progressBar = findViewById<ProgressBar>(R.id.progress_bar)
-        val contentLayout = findViewById<View>(R.id.content_layout)
 
         mViewModel = ViewModelProvider(
             this,
             SettingsViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
         )[SettingsViewModel::class.java]
 
-        val recyclerView = findViewById<RecyclerView>(R.id.authRecycle)
         recyclerView.adapter = authAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -51,8 +51,8 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         mViewModel.isLoading.observe(this) { isLoading ->
+            recyclerView.visibility = if (isLoading) View.GONE else View.VISIBLE
             progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            contentLayout.visibility = if (isLoading) View.GONE else View.VISIBLE
         }
 
         mViewModel.getSecurityTypes()
