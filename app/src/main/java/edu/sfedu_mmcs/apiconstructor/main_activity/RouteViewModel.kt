@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import edu.sfedu_mmcs.apiconstructor.utils.Api
-import edu.sfedu_mmcs.apiconstructor.utils.AuthInfo
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.Endpoint
 import edu.sfedu_mmcs.apiconstructor.utils.MethodItem
@@ -35,22 +34,38 @@ class RouteViewModel(
     fun getSchemaInfo(schema: Schema<*>, openAPI: OpenAPI): List<ContentInfo> {
         val result = ArrayList<ContentInfo>()
         if (schema.`$ref` != null) {
-            Log.d("Path parameter", "ref: ${schema.`$ref`}")
             result.addAll(resolveSchemaRef(schema.`$ref`, openAPI))
+        } else if (schema.type == "object") {
+            schema.properties?.forEach { (name, propSchema) ->
+                val required = schema.required?.contains(name) ?: false
+                if (propSchema.`$ref` != null) {
+                    result.addAll(resolveSchemaRef(propSchema.`$ref`, openAPI).map { ContentInfo(it.name, it.example, it.format, it.enumValues, required) })
+                } else if (propSchema.type == "object") {
+                    result.addAll(getSchemaInfo(propSchema, openAPI).map { ContentInfo(it.name, it.example, it.format, it.enumValues, required) })
+                } else if (propSchema.type == "array") {
+                    propSchema.items?.let { itemSchema ->
+                        val itemExample = itemSchema.example?.toString() ?: "item"
+                        val format = propSchema.format ?: propSchema.type
+                        result.add(ContentInfo(name, "[$itemExample]", format, propSchema.enum?.map { it.toString() }, required))
+                    }
+                } else {
+                    val example = propSchema.example?.toString() ?: propSchema.examples?.firstOrNull()?.toString() ?: ""
+                    val format = propSchema.format ?: propSchema.type
+                    val enumValues = propSchema.enum?.map { it.toString() }
+                    result.add(ContentInfo(name, example, format, enumValues, required))
+                }
+            }
         } else if (schema.type == "array") {
             schema.items?.let { itemSchema ->
                 val itemInfo = getSchemaInfo(itemSchema, openAPI)
                 val arrayValue = itemInfo.joinToString(", ") { it.example }
-                result.add(ContentInfo("array", "[$arrayValue]"))
+                val format = schema.format ?: schema.type
+                result.add(ContentInfo("array", "[$arrayValue]", format, schema.enum?.map { it.toString() }))
             }
         } else {
-            schema.properties?.forEach { (name, propSchema) ->
-                if (propSchema.example != null) {
-                    result.add(ContentInfo(name, propSchema.example.toString()))
-                } else if (propSchema.examples != null) {
-                    result.add(ContentInfo(name, propSchema.examples[0].toString()))
-                }
-            }
+            val example = schema.example?.toString() ?: schema.examples?.firstOrNull()?.toString() ?: ""
+            val format = schema.format ?: schema.type
+            result.add(ContentInfo("body", example, format, schema.enum?.map { it.toString() }))
         }
         return result
     }
@@ -60,31 +75,21 @@ class RouteViewModel(
         val schema = openAPI.components?.schemas?.get(refPath)
         val result = ArrayList<ContentInfo>()
         if (schema != null) {
-            Log.d("Path parameter", "        Resolved schema at: /components/schemas/$refPath")
-            Log.d("Path parameter", "        Type: ${schema.type}")
             schema.properties?.forEach { (name, propSchema) ->
-                if (propSchema.type != "array") {
-                    if (propSchema.`$ref` != null) {
-                        result.addAll(resolveSchemaRef(propSchema.`$ref`, openAPI))
-                    } else {
-                        result.add(
-                            ContentInfo(
-                                name,
-                                if (propSchema.example == null) "" else propSchema.example.toString()
-                            )
-                        )
+                val required = schema.required?.contains(name) ?: false
+                if (propSchema.`$ref` != null) {
+                    result.addAll(resolveSchemaRef(propSchema.`$ref`, openAPI).map { ContentInfo(it.name, it.example, it.format, it.enumValues, required) })
+                } else if (propSchema.type == "array") {
+                    propSchema.items?.let { itemSchema ->
+                        val itemValue = itemSchema.example?.toString() ?: "item"
+                        val format = propSchema.format ?: propSchema.type
+                        result.add(ContentInfo(name, "[$itemValue]", format, propSchema.enum?.map { it.toString() }, required))
                     }
                 } else {
-                    propSchema.items?.let { itemSchema ->
-                        val itemValue = if (itemSchema.example != null) {
-                            itemSchema.example.toString()
-                        } else if (itemSchema.`$ref` != null) {
-                            resolveSchemaRef(itemSchema.`$ref`, openAPI).joinToString { it.example }
-                        } else {
-                            "Array item"
-                        }
-                        result.add(ContentInfo(name, "[$itemValue]"))
-                    }
+                    val example = propSchema.example?.toString() ?: ""
+                    val format = propSchema.format ?: propSchema.type
+                    val enumValues = propSchema.enum?.map { it.toString() }
+                    result.add(ContentInfo(name, example, format, enumValues, required))
                 }
             }
         } else {
@@ -118,12 +123,20 @@ class RouteViewModel(
                     val openAPI = result.openAPI
                     val routesRes = mutableMapOf<String, MutableList<RouteInfo>>()
 
-                    // Group routes by path
                     for ((pathKey, pathItem) in openAPI.paths) {
                         pathItem.readOperationsMap().forEach { (httpMethod, operation) ->
                             val fieldsArr = ArrayList<ContentInfo>()
                             operation.parameters?.forEach { parameter ->
-                                fieldsArr.add(ContentInfo(parameter.name, ""))
+                                val schema = parameter.schema
+                                if (schema != null) {
+                                    val example = schema.example?.toString() ?: ""
+                                    val format = schema.format ?: schema.type
+                                    val enumValues = schema.enum?.map { it.toString() }
+                                    val required = parameter.required ?: false
+                                    fieldsArr.add(ContentInfo(parameter.name, example, format, enumValues, required))
+                                } else {
+                                    fieldsArr.add(ContentInfo(parameter.name, "", null, null, parameter.required ?: false))
+                                }
                             }
                             val secArr = ArrayList<String>()
                             operation.security?.forEach { sec ->
@@ -147,29 +160,38 @@ class RouteViewModel(
                                 fieldsArr,
                                 contentFields,
                                 secArr,
-                                respMap
+                                respMap,
+                                operation.description ?: ""
                             )
                             routesRes.getOrPut(pathKey) { mutableListOf() }.add(routeInfo)
                         }
                     }
 
-                    // Create groups by path prefix
+                    var prefix = ""
+                    for (i in 0 until routesRes.keys.minOf { it.length }) {
+                        val char = routesRes.keys.elementAt(0)[i]
+                        if (routesRes.keys.all { it[i] == char }) {
+                            prefix += char
+                        } else {
+                            break
+                        }
+                    }
+
                     val groups = mutableMapOf<String, MutableList<Endpoint>>()
                     routesRes.forEach { (path, routeInfos) ->
-                        val groupName = path.split("/")[1].takeIf { it.isNotEmpty() } ?: "Miscellaneous"
+                        val groupName = path.split("/")[prefix.count { it == '/' }].takeIf { it.isNotEmpty() } ?: "Miscellaneous"
                         val methods = routeInfos.map { MethodItem(it, it.method) }
                         val endpoint = Endpoint(path, methods)
                         groups.getOrPut(groupName) { mutableListOf() }.add(endpoint)
                     }
 
-                    // Convert to RouteGroup list with sorted endpoints
                     val routeGroupsList = groups.map { (groupName, endpoints) ->
                         RouteGroup(
                             groupName,
                             endpoints.sortedWith(
                                 compareBy(
-                                    { it.isSingleMethod }, // false (multi-method) comes first
-                                    { it.path } // Alphabetical within each category
+                                    { it.isSingleMethod },
+                                    { it.path }
                                 )
                             )
                         )

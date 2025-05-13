@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
         myViewModel = ViewModelProvider(
             this,
-            RouteViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
+            RouteViewModelFactory(getSharedPreferences("AppSettings", MODE_PRIVATE))
         )[RouteViewModel::class.java]
 
         val recyclerView = findViewById<RecyclerView>(R.id.routesRecycle)
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> return false
         }
     }
 }

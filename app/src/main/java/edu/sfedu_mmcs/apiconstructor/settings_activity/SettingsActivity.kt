@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,9 +35,15 @@ class SettingsActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.authRecycle)
         val progressBar = findViewById<ProgressBar>(R.id.progress_bar)
 
+        val toolbar = findViewById<Toolbar>(R.id.toolbarSettings)
+        setSupportActionBar(toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+        }
+
         mViewModel = ViewModelProvider(
             this,
-            SettingsViewModelFactory(getSharedPreferences("UrlPrefs", MODE_PRIVATE))
+            SettingsViewModelFactory(getSharedPreferences("AppSettings", MODE_PRIVATE))
         )[SettingsViewModel::class.java]
 
         recyclerView.adapter = authAdapter
@@ -83,5 +90,10 @@ class SettingsActivity : AppCompatActivity() {
             data[viewHolder.textView.text.toString()] = viewHolder.editText.text.toString()
         }
         return data
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
     }
 }

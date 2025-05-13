@@ -1,30 +1,23 @@
 package edu.sfedu_mmcs.apiconstructor.form_activity
 
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import edu.sfedu_mmcs.apiconstructor.utils.AnyTypeAdapter
 import edu.sfedu_mmcs.apiconstructor.utils.Api
-import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import edu.sfedu_mmcs.apiconstructor.utils.UrlBuilder
-import edu.sfedu_mmcs.apiconstructor.utils.replacePlaceholders
 import okhttp3.Callback
 import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 
 class FormViewModel(private val routeInfo: RouteInfo, val sp: SharedPreferences) : ViewModel() {
-
-
 
     val responseRes = MutableLiveData<String>()
 
@@ -35,15 +28,14 @@ class FormViewModel(private val routeInfo: RouteInfo, val sp: SharedPreferences)
     private val client = OkHttpClient()
     private val JSON = "application/json; charset=utf-8".toMediaType()
 
-    fun sendData(data: Map<String, String>, content: Map<String, ContentInfo>) {
-
+    fun sendData(fields: Map<String, String>, content: Map<String, String>) {
         val myGson = GsonBuilder().registerTypeAdapter(Any::class.java, AnyTypeAdapter()).create()
-        val url = UrlBuilder.buildUrl(api.getBaseApi(), routeInfo.route, data)
-        val body: RequestBody = myGson.toJson(content.values).toRequestBody(JSON)
+        val url = UrlBuilder.buildUrl(api.getBaseApi(), routeInfo.route, fields)
+        val body = myGson.toJson(content).toRequestBody(JSON)
 
         val headersBuilder = Headers.Builder()
         headersBuilder.add("Content-Type", "application/json")
-        for (name in routeInfo.security){
+        for (name in routeInfo.security) {
             headersBuilder.add(name, sp.getString(name, "")!!)
         }
         val request = Request.Builder()
@@ -57,19 +49,17 @@ class FormViewModel(private val routeInfo: RouteInfo, val sp: SharedPreferences)
                 e.printStackTrace()
                 responseRes.postValue(e.message)
             }
+
             override fun onResponse(call: okhttp3.Call, response: Response) {
                 response.use {
                     if (!response.isSuccessful) {
                         responseRes.postValue("${response.code} ${response.message}" + routeInfo.responses.getOrDefault(response.code.toString(), routeInfo.responses["default"]))
-                        throw IOException("Error sending request:" +
-                                "${response.code} ${response.message}")
+                        throw IOException("Error sending request: ${response.code} ${response.message}")
                     }
                     val resp_text = response.body!!.string()
-                    Log.d("Response", resp_text)
                     responseRes.postValue(resp_text)
                 }
             }
         })
-
     }
 }

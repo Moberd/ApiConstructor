@@ -20,7 +20,7 @@ class UrlActivity : AppCompatActivity() {
             this,
             UrlViewModelFactory(sharedPreferences)
         )[UrlViewModel::class.java]
-
+        setSupportActionBar(findViewById(R.id.toolbarUrl))
         val urlInput = findViewById<EditText>(R.id.url_input)
         val specInput = findViewById<EditText>(R.id.spec_input)
         val saveButton = findViewById<Button>(R.id.save_button)

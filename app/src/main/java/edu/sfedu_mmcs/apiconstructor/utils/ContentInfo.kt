@@ -4,8 +4,10 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-class ContentInfo(
+data class ContentInfo(
     val name: String,
     val example: String,
-): Parcelable {
-}
+    val format: String? = null,
+    val enumValues: List<String>? = null,
+    val required: Boolean = false
+) : Parcelable

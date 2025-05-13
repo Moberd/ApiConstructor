@@ -1,52 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Description"
-        android:layout_gravity="center_horizontal"
-        android:textSize="25sp" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Parameters"
-        android:layout_gravity="center_horizontal"
-        android:textSize="25sp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/formsRecycle"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        tools:listitem="@layout/form_card"
-        tools:itemCount="5"/>
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="@android:color/white" />
 
-    <TextView
-        android:layout_width="wrap_content"
+    <ScrollView
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Content"
-        android:layout_gravity="center_horizontal"
-        android:textSize="25sp" />
+        android:orientation="vertical"
+        android:padding="3dp"
+        android:fillViewport="false">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/formsContentRecycle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        tools:listitem="@layout/form_card"
-        tools:itemCount="5"/>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <Button
-        android:id="@+id/sendBtn"
-        android:text="/someroute/maybesomeid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Description"
+                android:id="@+id/descHead"
+                android:layout_gravity="center_horizontal"
+                android:textSize="25sp" />
+            <TextView
+                android:id="@+id/description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:layout_gravity="center_horizontal"
+                android:textSize="20sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parameters"
+                android:id="@+id/paramsHead"
+                android:layout_gravity="center_horizontal"
+                android:textSize="25sp" />
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/formsRecycle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                tools:listitem="@layout/form_card"
+                tools:itemCount="5"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/contHead"
+                android:textSize="25sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/formsContentRecycle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                tools:listitem="@layout/form_card"
+                tools:itemCount="5"/>
+
+            <Button
+                android:id="@+id/sendBtn"
+                android:text="/someroute/maybesomeid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                />
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

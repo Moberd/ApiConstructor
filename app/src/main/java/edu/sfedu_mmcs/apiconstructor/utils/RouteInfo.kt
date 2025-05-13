@@ -11,5 +11,6 @@ class RouteInfo(
     val fields: ArrayList<ContentInfo>,
     val content: ArrayList<ContentInfo>,
     val security: ArrayList<String>,
-    val responses: HashMap<String, String>
+    val responses: HashMap<String, String>,
+    val description: String
 ): Parcelable
