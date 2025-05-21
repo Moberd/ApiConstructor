@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.utils.Endpoint
-import edu.sfedu_mmcs.apiconstructor.utils.MethodItem
 import edu.sfedu_mmcs.apiconstructor.utils.RouteGroup
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 
@@ -21,7 +20,7 @@ class RouteButtonsAdapter(
     private val onClick: (route: RouteInfo) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var items = mutableListOf<Any>() //RouteGroup, Endpoint, MethodItem
+    private var items = mutableListOf<Any>() //RouteGroup, Endpoint, RouteInfo
 
     companion object {
         private const val TYPE_GROUP = 0
@@ -34,7 +33,7 @@ class RouteButtonsAdapter(
         return when (val item = items[position]) {
             is RouteGroup -> TYPE_GROUP
             is Endpoint -> if (item.isSingleMethod) TYPE_ENDPOINT_SINGLE else TYPE_ENDPOINT_MULTI
-            is MethodItem -> TYPE_METHOD
+            is RouteInfo -> TYPE_METHOD
             else -> throw IllegalArgumentException("Unknown item type")
         }
     }
@@ -80,7 +79,7 @@ class RouteButtonsAdapter(
                 holder.bind(endpoint)
             }
             is MethodViewHolder -> {
-                val method = items[position] as MethodItem
+                val method = items[position] as RouteInfo
                 holder.bind(method)
             }
         }
@@ -108,12 +107,12 @@ class RouteButtonsAdapter(
         fun bind(endpoint: Endpoint) {
             val methodItem = endpoint.methods.first()
             button.text = "${methodItem.method} ${endpoint.path}"
-            lockImage.visibility = if (methodItem.routeInfo.security.isNotEmpty()) View.VISIBLE else View.GONE
+            lockImage.visibility = if (methodItem.security.isNotEmpty()) View.VISIBLE else View.GONE
             button.setBackgroundTintList(getColorForMethod(methodItem.method))
-            button.setOnClickListener { onClick(methodItem.routeInfo) }
+            button.setOnClickListener { onClick(methodItem) }
             lockImage.setOnClickListener {
-                if (methodItem.routeInfo.security.isNotEmpty()) {
-                    showSecurityDialog(methodItem.routeInfo)
+                if (methodItem.security.isNotEmpty()) {
+                    showSecurityDialog(methodItem)
                 }
             }
         }
@@ -161,14 +160,14 @@ class RouteButtonsAdapter(
         private val button: Button = itemView.findViewById(R.id.method_button)
         private val lockImage: ImageView = itemView.findViewById(R.id.auth_lock)
 
-        fun bind(method: MethodItem) {
-            button.text = "${method.method} ${method.routeInfo.route}"
-            lockImage.visibility = if (method.routeInfo.security.isNotEmpty()) View.VISIBLE else View.GONE
+        fun bind(method: RouteInfo) {
+            button.text = "${method.method} ${method.route}"
+            lockImage.visibility = if (method.security.isNotEmpty()) View.VISIBLE else View.GONE
             button.setBackgroundTintList(getColorForMethod(method.method))
-            button.setOnClickListener { onClick(method.routeInfo) }
+            button.setOnClickListener { onClick(method) }
             lockImage.setOnClickListener {
-                if (method.routeInfo.security.isNotEmpty()) {
-                    showSecurityDialog(method.routeInfo)
+                if (method.security.isNotEmpty()) {
+                    showSecurityDialog(method)
                 }
             }
         }

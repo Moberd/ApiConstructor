@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import edu.sfedu_mmcs.apiconstructor.utils.Api
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
 import edu.sfedu_mmcs.apiconstructor.utils.Endpoint
-import edu.sfedu_mmcs.apiconstructor.utils.MethodItem
 import edu.sfedu_mmcs.apiconstructor.utils.RouteGroup
 import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import io.swagger.v3.oas.models.OpenAPI
@@ -179,9 +178,9 @@ class RouteViewModel(
 
                     val groups = mutableMapOf<String, MutableList<Endpoint>>()
                     routesRes.forEach { (path, routeInfos) ->
-                        val groupName = path.split("/")[prefix.count { it == '/' }].takeIf { it.isNotEmpty() } ?: "Miscellaneous"
-                        val methods = routeInfos.map { MethodItem(it, it.method) }
-                        val endpoint = Endpoint(path, methods)
+                        val endpoint = Endpoint(path, routeInfos)
+                        val tags = openAPI.paths[path]?.readOperations()?.firstOrNull()?.tags
+                        val groupName = tags?.firstOrNull() ?: "Missed tag"
                         groups.getOrPut(groupName) { mutableListOf() }.add(endpoint)
                     }
 

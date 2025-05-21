@@ -17,8 +17,8 @@ import com.google.gson.reflect.TypeToken
 import edu.sfedu_mmcs.apiconstructor.R
 import edu.sfedu_mmcs.apiconstructor.result_activity.ResultActivity
 import edu.sfedu_mmcs.apiconstructor.utils.ContentInfo
-import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 import androidx.appcompat.widget.Toolbar
+import edu.sfedu_mmcs.apiconstructor.utils.RouteInfo
 
 class FormActivity : AppCompatActivity() {
 

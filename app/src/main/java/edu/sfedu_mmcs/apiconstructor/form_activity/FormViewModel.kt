@@ -30,6 +30,7 @@ class FormViewModel(private val routeInfo: RouteInfo, val sp: SharedPreferences)
 
     fun sendData(fields: Map<String, String>, content: Map<String, String>) {
         val myGson = GsonBuilder().registerTypeAdapter(Any::class.java, AnyTypeAdapter()).create()
+
         val url = UrlBuilder.buildUrl(api.getBaseApi(), routeInfo.route, fields)
         val body = myGson.toJson(content).toRequestBody(JSON)
 
